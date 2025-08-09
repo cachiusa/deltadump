@@ -144,6 +144,7 @@ def compile_lang(lang, chapter):
     new_lang_dict["date"] = DATE
     count_translated = 0
     echo(f"assemble: ch{chapter} ({lang})")
+    mkdir(new_lang_objs)
     for obj in baselang_objs.iterdir():
         baselang_obj = file2dict(obj)
         newlang_obj = file2dict(str(new_lang_objs / obj.name))
@@ -175,6 +176,7 @@ def init_lang(lang):
         ch_pwd = PWD / f"chapter{chapter}"
         baselang_objs = ch_pwd / BASELANG / "obj"
         new_lang_objs = ch_pwd / lang / "obj"
+        mkdir(new_lang_objs)
         ls_base = [i.name for i in baselang_objs.iterdir()]
         ls_new = [i.name for i in new_lang_objs.iterdir()]
         for obj in ls_base:
