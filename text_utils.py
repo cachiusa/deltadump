@@ -147,7 +147,10 @@ def compile_lang(lang, chapter):
     mkdir(new_lang_objs)
     for obj in baselang_objs.iterdir():
         baselang_obj = file2dict(obj)
-        newlang_obj = file2dict(str(new_lang_objs / obj.name))
+        try:
+            newlang_obj = file2dict(str(new_lang_objs / obj.name))
+        except FileNotFoundError:
+            newlang_obj = {}
         for k in baselang_obj:
             if k not in newlang_obj:
                 continue
