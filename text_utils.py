@@ -5,27 +5,25 @@
 
 import argparse
 import json
-import os
 import pathlib
-import sys
+import os
 import time
 import urllib.request
-PWD = pathlib.Path(__file__).resolve().parents[0]
-sys.path.append(str(PWD / "common" / "lib"))
-import natsort
 
+PWD = pathlib.Path(__file__).resolve().parents[0]
 BASEURL = "https://raw.githubusercontent.com/HushBugger/hushbugger.github.io/refs/heads/master/deltarune/text"
 CHAPTERS = ["1", "2", "3", "4"]
 LANGS = ["en", "ja"]
-BASELANG = "en"
-
+BASE_LANG = "en"
+L10N_LANG = "vi"
+L10N_CHAPTER = "1"
 
 def echo(strg: str):
     print(f"--> {strg}")
 
 
-def mkdir(path):
-    os.makedirs(path, exist_ok=True)
+def mkdir(dir):
+    pathlib.Path.mkdir(dir, parents=True, exist_ok=True)
 
 
 def mkdict():
@@ -44,6 +42,15 @@ def file2dict(in_file):
 
 def rmfile(file: pathlib.Path):
     if file.exists(): file.unlink()
+
+
+def smartsort(k_and_v):
+    pieces = k_and_v[0].split("_")
+    for i, piece in enumerate(pieces):
+        if piece.isdigit():
+            # Natsort of integers (particularly line numbers)
+            pieces[i] = piece.rjust(16, "0")
+    return pieces
 
 
 def split_dump():
@@ -87,7 +94,7 @@ def split_dump():
                 dupecount = 0
             ch_sourcemap[filename][lineno] = k
         for filename in ch_sourcemap:
-            ch_sourcemap[filename] = dict(natsort.natsorted(ch_sourcemap[filename].items()))
+            ch_sourcemap[filename] = dict(sorted(ch_sourcemap[filename].items(), key=smartsort))
         ch_sourcemap_file = ch_pwd / "sourcemap.json"
         dict2file(ch_sourcemap, ch_sourcemap_file)
         # Split strings with the new sourcemap
@@ -137,9 +144,8 @@ def compile_lang(lang, chapter):
     """Assemble json for continuous localization"""
     DATE = str(int(time.time() * 1000))
     ch_pwd = PWD / f"chapter{chapter}"
-    baselang_objs = ch_pwd / BASELANG / "obj"
+    baselang_objs = ch_pwd / BASE_LANG / "obj"
     new_lang_objs = ch_pwd / lang / "obj"
-    new_lang_file = ch_pwd / f"lang_{lang}.json"
     new_lang_dict = {}
     new_lang_dict["date"] = DATE
     count_translated = 0
@@ -160,6 +166,10 @@ def compile_lang(lang, chapter):
     count_all = len(new_lang_dict) - 1
     l10n_progress = int((count_translated / count_all) * 100)
     echo(f"Translated {count_translated}/{count_all} ({l10n_progress}%)")
+    try:
+        new_lang_file = pathlib.Path(os.environ["DELTARUNE_HOME"]) / f"chapter{chapter}_windows" / "lang" / "lang_en.json"
+    except KeyError:
+        new_lang_file = ch_pwd / f"lang_{lang}.json"
     echo(str(new_lang_file))
     dict2file(new_lang_dict, new_lang_file)
 
@@ -177,8 +187,8 @@ def init_lang(lang):
     """Populate new language with empty json files"""
     for chapter in CHAPTERS:
         ch_pwd = PWD / f"chapter{chapter}"
-        baselang_objs = ch_pwd / BASELANG / "obj"
-        new_lang_objs = ch_pwd / lang / "obj"
+        baselang_objs = ch_pwd / BASE_LANG / "obj"
+        new_lang_objs = ch_pwd / L10N_LANG / "obj"
         mkdir(new_lang_objs)
         ls_base = [i.name for i in baselang_objs.iterdir()]
         ls_new = [i.name for i in new_lang_objs.iterdir()]
@@ -201,8 +211,8 @@ parser.add_argument("task", choices=[
 ])
 arg = parser.parse_args().task
 match arg:
-    case "compile": compile_lang("vi", "1")
-    case "init": init_lang("vi")
+    case "compile": compile_lang(L10N_LANG, L10N_CHAPTER)
+    case "init": init_lang(L10N_LANG)
     case "split": split_dump()
     case "update":
         fetch_dump(["lang.json", "sourcemap.json"])
