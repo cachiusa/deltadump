@@ -188,7 +188,7 @@ def init_lang(lang):
     for chapter in CHAPTERS:
         ch_pwd = PWD / f"chapter{chapter}"
         baselang_objs = ch_pwd / BASE_LANG / "obj"
-        new_lang_objs = ch_pwd / L10N_LANG / "obj"
+        new_lang_objs = ch_pwd / lang / "obj"
         mkdir(new_lang_objs)
         ls_base = [i.name for i in baselang_objs.iterdir()]
         ls_new = [i.name for i in new_lang_objs.iterdir()]
