@@ -82,9 +82,9 @@ def split_dump():
         for k, v in raw_sourcemap[chapter].items():
             filename, lineno = v.split(":")
             try:
-                ch_objfile = ch_sourcemap[filename]
+                ch_sourcemap[filename]
             except KeyError:
-                ch_objfile = ch_sourcemap[filename] = {}
+                ch_sourcemap[filename] = {}
             # sometimes Mr. Toby loves single-line code
             # in this case, we can't guarantee correct sentences order
             if linedups_map[chapter][v] > 1:
@@ -106,13 +106,13 @@ def split_dump():
             for filename in new_sourcemap[chapter]:
                 obj_file = obj_dir / str(filename.removesuffix(".gml") + ".json")
                 obj_strings = {}
-                for k, v in new_sourcemap[chapter][filename].items():
+                for k in new_sourcemap[chapter][filename].values():
                     try:
-                        str_value = raw_lang[chapter][lang][v]
+                        str_value = raw_lang[chapter][lang][k]
                     except KeyError:
-                        print(f"not found: {v}")
+                        print(f"not found: {k}")
                         continue
-                    lang_strings[v] = obj_strings[v] = str_value
+                    lang_strings[k] = obj_strings[k] = str_value
                 if obj_strings == {}:
                     rmfile(obj_file)
                     continue
